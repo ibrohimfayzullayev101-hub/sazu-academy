@@ -7,11 +7,21 @@
   const esc = (value='') => String(value).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function showAuth(message='') { authView.hidden=false; appView.hidden=true; $('authMessage').textContent=message; }
   function showApp(user) { currentUser=user; authView.hidden=true; appView.hidden=false; $('adminEmail').textContent=user.email||'Admin'; loadDashboard(); }
+  async function verifyAdmin(user) {
+    const { data, error } = await db.from('admin_users').select('user_id').eq('user_id', user.id).maybeSingle();
+    if (error || !data) {
+      await db.auth.signOut();
+      showAuth(error ? 'Admin huquqini tekshirib bo‘lmadi: ' + error.message : 'Bu hisobda administrator huquqi yo‘q.');
+      return false;
+    }
+    showApp(user);
+    return true;
+  }
   if (!configReady || !window.supabase) { showAuth('Avval supabase-config.js fayliga Supabase Project URL va anon key kiriting.'); $('loginForm').addEventListener('submit',e=>e.preventDefault()); return; }
   db = window.supabase.createClient(window.SAZU_SUPABASE_URL, window.SAZU_SUPABASE_ANON_KEY);
-  $('loginForm').addEventListener('submit', async e=>{ e.preventDefault(); $('authMessage').textContent='Tekshirilmoqda...'; const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value}); if(error){$('authMessage').textContent='Kirish amalga oshmadi: '+error.message;return;} showApp(data.user); });
+  $('loginForm').addEventListener('submit', async e=>{ e.preventDefault(); $('authMessage').textContent='Tekshirilmoqda...'; const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value}); if(error){$('authMessage').textContent='Kirish amalga oshmadi: '+error.message;return;} await verifyAdmin(data.user); });
   $('logoutBtn').addEventListener('click',async()=>{await db.auth.signOut();showAuth('Hisobdan chiqdingiz.');});
-  db.auth.getSession().then(({data})=>{if(data.session)showApp(data.session.user);});
+  db.auth.getSession().then(async ({data})=>{if(data.session) await verifyAdmin(data.session.user);});
   $('themeBtn').addEventListener('click',()=>{const dark=document.documentElement.dataset.theme!=='dark';document.documentElement.dataset.theme=dark?'dark':'light';$('themeBtn').textContent=dark?'☀':'☾';localStorage.setItem('sazu-admin-theme',dark?'dark':'light');});
   document.documentElement.dataset.theme=localStorage.getItem('sazu-admin-theme')||'light';$('themeBtn').textContent=document.documentElement.dataset.theme==='dark'?'☀':'☾';
   document.querySelectorAll('.side-link').forEach(b=>b.addEventListener('click',()=>navigate(b.dataset.page)));
