@@ -6,7 +6,10 @@ SAZU ACADEMY WEBSITE
 4. Edit text and translations in script.js. Styles are in style.css.
 
 IMPORTANT:
-- The contact form currently opens Telegram with a pre-filled message. It does not automatically send the message; the visitor must press Send in Telegram.
+- The contact form sends applications to the Vercel serverless endpoint at /api/lead.
+- The endpoint saves each application in Supabase and sends it to the Telegram group.
+- Configure these Vercel Environment Variables before deploying: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, SUPABASE_URL, SUPABASE_ANON_KEY.
+- Add the Telegram bot to the target group and grant it permission to send messages. Keep the bot token secret; never put it in frontend JavaScript.
 - Confirm the exact branch addresses and map pins before publishing.
 - Course fees, schedules, teacher profiles and real classroom photos can be added when supplied.
 - The email and Telegram links are based on the contact details supplied.
